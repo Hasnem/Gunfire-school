@@ -1,0 +1,11 @@
+streamlit
+requests
+pandas
+numpy
+matplotlib
+seaborn
+plotly
+Pillow
+streamlit-extras
+nltk
+wordcloud

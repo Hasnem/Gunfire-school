@@ -31,7 +31,7 @@ def main():
     page = st.sidebar.selectbox("Choose a page", ["Dashboard", "About"])
     try:
         image = Image.open('Everytown_final_logo.png')
-        st.sidebar.image(image, use_column_width=True)
+        st.sidebar.image(image, use_container_width=True)
     except Exception:
         st.sidebar.write("Logo Image Not Found or Not Provided.")
 

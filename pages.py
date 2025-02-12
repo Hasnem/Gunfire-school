@@ -23,7 +23,8 @@ def about_page() -> None:
           and actionable insights. This project aims to harness data from 
           <a href="https://everytownresearch.org/maps/gunfire-on-school-grounds/" 
              class="source-link" target="_blank">Everytown Research</a> 
-          to inform policymakers, educators, researchers, and the public about the scale and nature of these incidents.
+          to inform policymakers, educators, researchers, and the public about the scale 
+          and nature of these incidents, and inspire data-driven dialogue.
         </p>
 
         <!-- Our Data Story -->
@@ -32,7 +33,7 @@ def about_page() -> None:
           Each chart and observation in this dashboard tells a chapter in a broader narrative 
           about gunfire incidents on school grounds across the United States. 
           By translating raw data into digestible visuals, our goal is to illuminate trends 
-          and encourage data-driven discussions around safety and prevention.
+          and encourage thoughtful discussions around prevention.
         </p>
 
         <!-- Behind the Numbers -->
@@ -41,11 +42,11 @@ def about_page() -> None:
           The dataset includes:
         </p>
         <ul>
-          <li><span class="everytown-red important">Date, City, and State</span> – pinpoints each incident in time and space</li>
-          <li><span class="everytown-red important">Latitude/Longitude</span> – enables geographic plotting and hotspot identification</li>
-          <li><span class="everytown-red important">Intent & Outcome</span> – offers insight into the nature and aftermath of these events</li>
-          <li><span class="everytown-red important">Number Killed & Wounded</span> – reveals the human toll in stark terms</li>
-          <li><span class="everytown-red important">Narratives</span> – adds qualitative context to each incident where available</li>
+          <li><span class="everytown-red important">Date, City, and State</span> – pinpointing each incident in time and space</li>
+          <li><span class="everytown-red important">Latitude/Longitude</span> – enabling geographic plotting and hotspot identification</li>
+          <li><span class="everytown-red important">Intent & Outcome</span> – offering insights into the nature and aftermath of these events</li>
+          <li><span class="everytown-red important">Number Killed & Wounded</span> – revealing the human toll in stark terms</li>
+          <li><span class="everytown-red important">Narratives</span> – providing qualitative context for each incident where available</li>
         </ul>
 
         <!-- Methodology & Sources -->
@@ -53,47 +54,45 @@ def about_page() -> None:
         <p>
           <a href="https://everytownresearch.org/" class="source-link" target="_blank">Everytown Research</a> 
           continually updates these figures through news reports, law enforcement data, 
-          and official records. Our dashboard fetches this dataset in near real-time 
-          and applies a series of data transformations—cleaning, mapping state abbreviations, 
-          and generating new columns for analysis. 
+          and official records. Our dashboard fetches this dataset in near real-time, 
+          and automatically applies data transformations (cleaning, mapping state abbreviations, 
+          and generating new columns) for seamless exploration.
         </p>
 
         <!-- Tools & Technology -->
         <h4 class="everytown-blue important">Tools & Technology</h4>
         <ul>
-          <li><b>Streamlit</b> – for the interactive UI</li>
-          <li><b>Pandas</b> – for data cleaning and manipulation</li>
-          <li><b>Plotly</b> – to create interactive visualizations</li>
-          <li><b>Requests</b> – for fetching live CSV data from Everytown’s website</li>
+          <li><b>Streamlit</b> – for the interactive UI and user-driven filters</li>
+          <li><b>Pandas</b> – for data cleaning, filtering, and analysis</li>
+          <li><b>Plotly</b> – to create dynamic and interactive visualizations (line charts, bar charts, maps, etc.)</li>
+          <li><b>Requests</b> – for fetching CSV data from Everytown’s website</li>
         </ul>
 
         <!-- Limitations & Future Directions -->
         <h4 class="everytown-blue important">Limitations & Future Directions</h4>
         <p>
-          Although this dashboard strives to provide a comprehensive and timely overview, 
-          there are some inherent limitations:
+          Despite striving for timely and accurate insights, there are inherent limitations:
         </p>
         <ul>
           <li><span class="everytown-red important">Partial 2025 Data</span> – The data for 2025 is still evolving and may not capture all incidents.</li>
-          <li><span class="everytown-red important">Delayed Reporting</span> – Some incidents might be reported late or require verification.</li>
-          <li><span class="everytown-red important">Geo-Coordinates</span> – Missing or inaccurate latitude/longitude values can affect the map analysis.</li>
-          <li><span class="everytown-red important">Future Enhancements</span> – We plan to integrate more external datasets (e.g., demographic factors, local policies) for richer context.</li>
+          <li><span class="everytown-red important">Delayed Reporting</span> – Some incidents may be reported late or require verification.</li>
+          <li><span class="everytown-red important">Geo-Coordinates</span> – Missing or inaccurate latitude/longitude can affect the accuracy of the maps.</li>
+          <li><span class="everytown-red important">Future Enhancements</span> – Including external datasets (e.g., demographic, local policy) could add vital context.</li>
         </ul>
 
         <!-- Our Mission -->
         <h4 class="everytown-blue important">Our Mission</h4>
         <p>
-          By transforming raw data into compelling, easy-to-understand visuals, this dashboard 
-          endeavors to spark conversations and motivate meaningful changes to address gun violence 
-          in schools.
+          By transforming raw data into compelling visuals, this dashboard seeks to spark 
+          conversations and drive meaningful changes to address gun violence in schools.
         </p>
 
         <!-- A Call to Action -->
         <h4 class="everytown-blue important">A Call to Action</h4>
         <p>
-          We invite policymakers, researchers, educators, and the general public to explore these findings. 
-          Let every data point be a moment for reflection—and a step closer to collective action 
-          in preventing further tragedies.
+          We invite everyone—policymakers, researchers, educators, concerned citizens—to explore 
+          these findings. Every data point is a step toward greater awareness and collaborative 
+          action in preventing future tragedies.
         </p>
         """,
         unsafe_allow_html=True

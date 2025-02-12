@@ -6,7 +6,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from datetime import date
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 
 # Global constants
 FONT_SIZE = "16px"
@@ -33,11 +33,6 @@ STATE_MAPPING = {
 ###############################################################################
 
 def fetch_data() -> pd.DataFrame:
-    """
-    Fetches the raw CSV data from Everytown Research's Gunfire on School Grounds URL.
-    Returns:
-        pd.DataFrame: Raw data as a DataFrame.
-    """
     csv_url = 'https://everytownresearch.org/wp-content/uploads/sites/4/etown-maps/gunfire-on-school-grounds/data.csv'
     headers = {'User-Agent': 'Mozilla/5.0'}
     response = requests.get(csv_url, headers=headers)
@@ -46,13 +41,6 @@ def fetch_data() -> pd.DataFrame:
     return df
 
 def preprocess_data(df: pd.DataFrame, state_mapping: dict = STATE_MAPPING) -> pd.DataFrame:
-    """
-    Preprocesses the data:
-      - Converts datetime columns.
-      - Converts latitude/longitude to numeric.
-      - Drops extraneous columns and rows with missing location data.
-      - Adds grouping columns ('Year', 'Month', 'DayOfWeek') and maps state abbreviations.
-    """
     datetime_cols = ['Incident Date', 'Created', 'Last Modified']
     numeric_cols = ['Latitude', 'Longitude']
     drop_cols = ['Source 2', 'URL 2', 'Source 3', 'URL 3', 'School Type']
@@ -66,15 +54,44 @@ def preprocess_data(df: pd.DataFrame, state_mapping: dict = STATE_MAPPING) -> pd
     df['DayOfWeek'] = df['Incident Date'].dt.strftime('%a')
     df['State_name'] = df['State'].map(state_mapping)
 
+    # Could create a total casualties column here, or do it on the fly
+    # df['Total_Casualties'] = df['Number Killed'] + df['Number Wounded']
+
     return df
 
 @st.cache_data
 def load_and_preprocess_data() -> pd.DataFrame:
-    """
-    Loads and preprocesses the data. The result is cached.
-    """
     df = fetch_data()
     return preprocess_data(df)
+
+###############################################################################
+#                              ADDITIONAL FILTERS                             #
+###############################################################################
+
+def filter_by_min_casualties(df: pd.DataFrame, min_casualties: int) -> pd.DataFrame:
+    """
+    Keeps only incidents with at least `min_casualties` total casualties (killed + wounded).
+    """
+    if df.empty:
+        return df
+    df['Total_Casualties'] = df['Number Killed'] + df['Number Wounded']
+    return df[df['Total_Casualties'] >= min_casualties]
+
+def export_filtered_data(df: pd.DataFrame) -> None:
+    """
+    Provides a Streamlit download button for the filtered dataset.
+    """
+    if df.empty:
+        st.warning("No data available to download with the current filters.")
+        return
+
+    csv_data = df.to_csv(index=False)
+    st.download_button(
+        label="Download Filtered Data as CSV",
+        data=csv_data,
+        file_name="gunfire_filtered_data.csv",
+        mime="text/csv"
+    )
 
 ###############################################################################
 #                                SIDEBAR FILTERS                              #
@@ -82,9 +99,6 @@ def load_and_preprocess_data() -> pd.DataFrame:
 
 def apply_filters(df: pd.DataFrame, state: List[str], intent: List[str],
                   incident_date_range: Tuple[date, date]) -> pd.DataFrame:
-    """
-    Applies filters for state, intent, and incident date range.
-    """
     if state:
         df = df[df['State_name'].isin(state)]
     if intent:
@@ -96,15 +110,9 @@ def apply_filters(df: pd.DataFrame, state: List[str], intent: List[str],
     return df
 
 def get_date_range(df: pd.DataFrame) -> Tuple[date, date]:
-    """
-    Determines the min and max incident dates.
-    """
     return df['Incident Date'].min().date(), df['Incident Date'].max().date()
 
 def apply_sidebar_filters(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Renders sidebar filter widgets and applies them.
-    """
     col1, col2, col3 = st.columns(3)
     with col1:
         state_options = sorted(df['State_name'].dropna().unique())
@@ -132,9 +140,6 @@ def apply_sidebar_filters(df: pd.DataFrame) -> pd.DataFrame:
 ###############################################################################
 
 def display_header() -> None:
-    """
-    Displays the main header/title of the dashboard.
-    """
     st.markdown(
         """
         <h1 style="font-size: 2.5em;">
@@ -146,16 +151,12 @@ def display_header() -> None:
     st.markdown("Data source: [Everytown Research Gunfire on School Grounds](https://everytownresearch.org/maps/gunfire-on-school-grounds/)")
 
 def display_latest_incident(df: pd.DataFrame) -> None:
-    """
-    Displays details of the most recent incident on the sidebar.
-    """
     if df.empty:
         st.sidebar.subheader("No incidents found for the selected filters.")
         return
 
     max_date = df['Incident Date'].max()
     latest_incident_row = df[df['Incident Date'] == max_date].iloc[0]
-
     incident_date = latest_incident_row['Incident Date'].strftime('%B %d, %Y')
     news_line = (
         f"On <span style='font-weight:bold'>{incident_date}</span>, a heartbreaking event unfolded at "
@@ -173,50 +174,12 @@ def display_latest_incident(df: pd.DataFrame) -> None:
 #                               METRIC CARDS                                  #
 ###############################################################################
 
-def calculate_metrics(df: pd.DataFrame) -> Tuple[int, int, int, int]:
-    """
-    Calculates key metrics for the filtered data.
-    """
-    if df.empty:
-        return 0, 0, 0, 0
-
-    num_victims = int(df[['Number Killed', 'Number Wounded']].sum().sum())
-    num_incidents = len(df)
-    num_killed = int(df['Number Killed'].sum())
-    num_injured = int(df['Number Wounded'].sum())
-    return num_victims, num_incidents, num_killed, num_injured
-
-def metric_cards(df: pd.DataFrame) -> None:
-    """
-    Displays key metrics (victims, incidents, killed, injured) as cards.
-    """
-    num_victims, num_incidents, num_killed, num_injured = calculate_metrics(df)
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Num of Victims", num_victims)
-    col2.metric("Num of Incidents", num_incidents)
-    col3.metric("Num Killed", num_killed)
-    col4.metric("Num Injured", num_injured)
-
-    style_metric_cards()
-    st.markdown(
-        f"""
-        Since 2013, <span style="color: red; font-weight: bold;">{num_incidents}</span> incidents 
-        have scarred school grounds, claiming <span style="color: red; font-weight: bold;">{num_killed}</span> lives 
-        and leaving <span style="color: red; font-weight: bold;">{num_injured}</span> injured. 
-        Each number tells a story of loss and a call for change.
-        """, unsafe_allow_html=True
-    )
-    st.divider()
-
 def style_metric_cards(background_color: str = "#FFF",
                        border_size_px: int = 1,
                        border_color: str = "#CCC",
                        border_radius_px: int = 5,
                        border_left_color: str = "#ED2F2C",
                        box_shadow: bool = True) -> None:
-    """
-    Applies custom CSS styling to metric cards.
-    """
     box_shadow_str = ("box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;" 
                       if box_shadow else "box-shadow: none !important;")
     st.markdown(
@@ -235,23 +198,46 @@ def style_metric_cards(background_color: str = "#FFF",
         """, unsafe_allow_html=True,
     )
 
+def calculate_metrics(df: pd.DataFrame) -> Tuple[int, int, int, int]:
+    if df.empty:
+        return 0, 0, 0, 0
+    num_victims = int(df[['Number Killed', 'Number Wounded']].sum().sum())
+    num_incidents = len(df)
+    num_killed = int(df['Number Killed'].sum())
+    num_injured = int(df['Number Wounded'].sum())
+    return num_victims, num_incidents, num_killed, num_injured
+
+def metric_cards(df: pd.DataFrame) -> None:
+    num_victims, num_incidents, num_killed, num_injured = calculate_metrics(df)
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Num of Victims", num_victims)
+    col2.metric("Num of Incidents", num_incidents)
+    col3.metric("Num Killed", num_killed)
+    col4.metric("Num Injured", num_injured)
+
+    style_metric_cards()
+    st.markdown(
+        f"""
+        Since 2013, <span style="color: red; font-weight: bold;">{num_incidents}</span> incidents 
+        have scarred school grounds, claiming <span style="color: red; font-weight: bold;">{num_killed}</span> lives 
+        and leaving <span style="color: red; font-weight: bold;">{num_injured}</span> injured. 
+        Each number tells a story of loss and a call for change.
+        """, unsafe_allow_html=True
+    )
+    st.divider()
+
 ###############################################################################
-#                             YEARLY TREND                                    #
+#                             YEARLY / MONTHLY TRENDS                         #
 ###############################################################################
 
 def display_trends(df: pd.DataFrame) -> go.Figure:
-    """
-    Creates a multi-series line chart showing yearly trends of incidents, killed, and wounded.
-    """
+    if df.empty:
+        return go.Figure()
+
     df['Year'] = pd.to_datetime(df['Incident Date']).dt.year
-    fig = plot_trends(df)
-    fig.update_layout(autosize=True, height=400)
-    return fig
+    return plot_trends(df)
 
 def plot_trends(df: pd.DataFrame) -> go.Figure:
-    """
-    Builds a Plotly line chart that shows incidents, killed, and wounded per year.
-    """
     if df.empty:
         return go.Figure()
 
@@ -279,21 +265,15 @@ def plot_trends(df: pd.DataFrame) -> go.Figure:
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
         hovermode='x unified',
-        legend=dict(x=0.01, y=0.99, font=dict(size=12, color="black"), bgcolor="rgba(0,0,0,0)")
+        legend=dict(x=0.01, y=0.99, font=dict(size=12, color="black"), bgcolor="rgba(0,0,0,0)"),
+        autosize=True,
+        height=400
     )
     return fig
 
-###############################################################################
-#                            MONTHLY TREND                                    #
-###############################################################################
-
-def monthly_trend_analysis(
-    df: pd.DataFrame,
-    graph_title: str = "Monthly Trend: Incidents Over the Calendar Year"
-) -> go.Figure:
-    """
-    Creates a bar chart for monthly incident counts with an average line.
-    """
+def monthly_trend_analysis(df: pd.DataFrame,
+                           graph_title: str = "Monthly Trend: Incidents Over the Calendar Year"
+                           ) -> go.Figure:
     if df.empty:
         return go.Figure()
 
@@ -303,9 +283,14 @@ def monthly_trend_analysis(
     df_monthly = pd.DataFrame({'Month': monthly_counts.index, 'Count': monthly_counts.values})
 
     color_scale = [[0, 'lightgray'], [1, '#00629b']]
-    fig = px.bar(df_monthly, x='Month', y='Count', title=graph_title,
-                 color='Count', color_continuous_scale=color_scale)
-
+    fig = px.bar(
+        df_monthly,
+        x='Month',
+        y='Count',
+        title=graph_title,
+        color='Count',
+        color_continuous_scale=color_scale
+    )
     avg_count = df_monthly['Count'].mean()
     fig.add_hline(
         y=avg_count,
@@ -327,13 +312,10 @@ def monthly_trend_analysis(
     return fig
 
 ###############################################################################
-#                         DISTRIBUTION BY KEY FACTOR                          #
+#                      DISTRIBUTION (Intent / Outcome)                        #
 ###############################################################################
 
 def display_key_factor_distribution(df: pd.DataFrame) -> None:
-    """
-    Displays a bar chart that shows distribution by chosen factor (Outcome or Intent).
-    """
     if df.empty:
         st.info("No data available for distribution analysis.")
         return
@@ -351,9 +333,6 @@ def display_key_factor_distribution(df: pd.DataFrame) -> None:
     st.plotly_chart(chart, use_container_width=True)
 
 def plot_factor_distribution(df: pd.DataFrame, column_name: str) -> go.Figure:
-    """
-    Creates a horizontal bar chart showing counts and percentages for a given column.
-    """
     if df.empty:
         return go.Figure()
 
@@ -391,14 +370,10 @@ def plot_factor_distribution(df: pd.DataFrame, column_name: str) -> go.Figure:
     return fig
 
 ###############################################################################
-#                           HEATMAP (INTENT vs OUTCOME)                       #
+#                           HEATMAP (Intent vs Outcome)                       #
 ###############################################################################
 
 def create_heatmap(df: pd.DataFrame) -> go.Figure:
-    """
-    Creates a heatmap of Intent vs. Outcome that displays both the incident counts and
-    the percentage of the total incidents in hover text.
-    """
     if df.empty:
         return go.Figure()
 
@@ -427,7 +402,6 @@ def create_heatmap(df: pd.DataFrame) -> go.Figure:
             "Percent of Total: %{customdata:.1f}%<extra></extra>"
         )
     )
-
     annotations = []
     for i, row in enumerate(pivot_table.values):
         for j, value in enumerate(row):
@@ -454,13 +428,78 @@ def create_heatmap(df: pd.DataFrame) -> go.Figure:
     return fig
 
 ###############################################################################
-#                            STATEWISE ANALYSIS                               #
+#                           DAY-OF-WEEK ANALYSIS                              #
+###############################################################################
+
+def display_day_of_week_analysis(df: pd.DataFrame) -> None:
+    """
+    Allows the user to pick whether to see the day-of-week distribution by:
+      - Number of Incidents
+      - Total Casualties
+    """
+    if df.empty:
+        st.warning("No data available for Day-of-Week analysis.")
+        return
+
+    st.markdown("<h3>Day-of-Week Analysis</h3>", unsafe_allow_html=True)
+    option = st.selectbox(
+        "Choose a metric for day-of-week distribution",
+        ("Number of Incidents", "Total Casualties")
+    )
+    fig = plot_day_of_week_distribution(df, option)
+    st.plotly_chart(fig, use_container_width=True)
+
+def plot_day_of_week_distribution(df: pd.DataFrame, metric: str) -> go.Figure:
+    """
+    Plots the number of incidents or total casualties by day of week in a bar chart.
+    """
+    # Ensure day of week is present
+    if "DayOfWeek" not in df.columns:
+        return go.Figure()
+
+    # Create 'Total Casualties' if needed
+    if "Total_Casualties" not in df.columns:
+        df['Total_Casualties'] = df['Number Killed'] + df['Number Wounded']
+
+    # Prepare data
+    day_order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    if metric == "Number of Incidents":
+        data_series = df.groupby("DayOfWeek").size()
+        title = "Day-of-Week: Number of Incidents"
+    else:
+        data_series = df.groupby("DayOfWeek")["Total_Casualties"].sum()
+        title = "Day-of-Week: Total Casualties"
+
+    # Reindex to ensure order of days
+    data_series = data_series.reindex(day_order, fill_value=0)
+    chart_df = pd.DataFrame({"DayOfWeek": data_series.index, "Value": data_series.values})
+
+    # Build bar chart
+    color_scale = px.colors.sequential.OrRd
+    fig = px.bar(
+        chart_df,
+        x="DayOfWeek",
+        y="Value",
+        title=title,
+        color="Value",
+        color_continuous_scale=color_scale
+    )
+    fig.update_layout(
+        xaxis_title="Day of Week",
+        yaxis_title=metric,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        showlegend=False,
+        autosize=True,
+        height=400
+    )
+    return fig
+
+###############################################################################
+#                        STATEWISE ANALYSIS & MAPS                            #
 ###############################################################################
 
 def plot_statewise_data(df: pd.DataFrame) -> Tuple[go.Figure, go.Figure]:
-    """
-    Generates a dual-axis bar+line chart and an enhanced US map for statewise analysis.
-    """
     if df.empty:
         return go.Figure(), go.Figure()
 
@@ -482,18 +521,13 @@ def plot_statewise_data(df: pd.DataFrame) -> Tuple[go.Figure, go.Figure]:
     )
     fig_bar_line.update_layout(autosize=True, height=400)
 
-    fig_map = generate_density_map(df)
-    return fig_bar_line, fig_map
+    fig_map_scatter = generate_density_map(df)
+    return fig_bar_line, fig_map_scatter
 
-def plot_dual_axis_bar_and_line(
-    data: pd.DataFrame,
-    bar_col: str,
-    line_col: str,
-    colors: List[str]
-) -> go.Figure:
-    """
-    Creates a dual-axis chart with bars (incidents) and a line (cumulative percentage).
-    """
+def plot_dual_axis_bar_and_line(data: pd.DataFrame,
+                                bar_col: str,
+                                line_col: str,
+                                colors: List[str]) -> go.Figure:
     fig = go.Figure()
     fig.add_trace(go.Bar(
         x=data['State_name'],
@@ -523,16 +557,11 @@ def plot_dual_axis_bar_and_line(
     )
     return fig
 
-def generate_density_map(
-    df: pd.DataFrame,
-    lat_col: str = 'Latitude',
-    lon_col: str = 'Longitude',
-    killed_col: str = 'Number Killed',
-    wounded_col: str = 'Number Wounded'
-) -> go.Figure:
-    """
-    Creates a bubble map of incidents across the US using Plotly's scatter_geo.
-    """
+def generate_density_map(df: pd.DataFrame,
+                         lat_col: str = 'Latitude',
+                         lon_col: str = 'Longitude',
+                         killed_col: str = 'Number Killed',
+                         wounded_col: str = 'Number Wounded') -> go.Figure:
     if df.empty:
         return go.Figure()
 
@@ -561,7 +590,6 @@ def generate_density_map(
         scope='usa',
         projection='albers usa'
     )
-
     fig.update_layout(
         width=1200,
         height=700,
@@ -570,16 +598,49 @@ def generate_density_map(
     )
     return fig
 
+def plot_state_choropleth(df: pd.DataFrame, color_scale: str = "Reds") -> go.Figure:
+    if df.empty:
+        return go.Figure()
+
+    inv_state_mapping = {v: k for k, v in STATE_MAPPING.items()}
+    incidents_by_state = df['State_name'].value_counts().reset_index()
+    incidents_by_state.columns = ['State_name', 'Incidents']
+    incidents_by_state['Abbrev'] = incidents_by_state['State_name'].map(inv_state_mapping)
+    incidents_by_state.dropna(subset=['Abbrev'], inplace=True)
+
+    fig = px.choropleth(
+        incidents_by_state,
+        locations='Abbrev',
+        color='Incidents',
+        locationmode="USA-states",
+        scope="usa",
+        color_continuous_scale=color_scale,
+        hover_name='State_name',
+        hover_data={'Abbrev': False, 'Incidents': True}
+    )
+    fig.update_layout(
+        title_text='Choropleth: Incident Counts by State',
+        geo=dict(
+            lakecolor='rgb(255, 255, 255)',
+            bgcolor='white'
+        ),
+        margin=dict(l=50, r=50, t=50, b=50),
+        paper_bgcolor='white',
+        width=1200,
+        height=700
+    )
+    return fig
+
+###############################################################################
+#                               TOP 10 CITIES                                 #
+###############################################################################
+
 def create_top_cities_bar_plot(df: pd.DataFrame) -> go.Figure:
-    """
-    Creates a horizontal bar chart for the top 10 cities with the most incidents.
-    """
     if df.empty:
         return go.Figure()
 
     city_counts = df['City'].value_counts().head(10)
     df_top_cities = pd.DataFrame({'City': city_counts.index, 'Number of Incidents': city_counts.values})
-
     color_scale = px.colors.sequential.RdBu[::-1]
     fig = px.bar(
         df_top_cities,
@@ -604,16 +665,26 @@ def create_top_cities_bar_plot(df: pd.DataFrame) -> go.Figure:
     return fig
 
 ###############################################################################
+#                          TOP 5 MOST TRAGIC INCIDENTS                        #
+###############################################################################
+
+def display_top_tragic_incidents(df: pd.DataFrame, n: int = 5) -> None:
+    if df.empty:
+        st.info("No data available to identify most tragic incidents.")
+        return
+
+    df['Total_Casualties'] = df['Number Killed'] + df['Number Wounded']
+    df_sorted = df.sort_values(by='Total_Casualties', ascending=False).head(n)
+
+    st.markdown(f"<h3 style='font-size:1.1em;'>Top {n} Most Tragic Incidents</h3>", unsafe_allow_html=True)
+    st.table(df_sorted[['Incident Date', 'City', 'State_name', 'Number Killed', 'Number Wounded', 'Total_Casualties']])
+
+###############################################################################
 #                        DYNAMIC OBSERVATION FUNCTIONS                        #
 ###############################################################################
 
 def generate_yearly_trend_observations(df: pd.DataFrame) -> str:
-    """
-    Generates a storytelling HTML snippet with observations on yearly trends.
-    This interpretation goes deeper into how the data evolves from the earliest
-    available year to the latest, highlights peak years, and notes major shifts
-    or anomalies (e.g., the pandemic).
-    """
+    # (same as before or improved)
     if df.empty:
         return "<p><em>No data available to narrate the yearly journey.</em></p>"
 
@@ -631,24 +702,21 @@ def generate_yearly_trend_observations(df: pd.DataFrame) -> str:
     change_from_start = ((end_count - start_count) / start_count * 100) if start_count else 0
 
     notes = []
-    # Example note for partial data in a future year
     if 2025 in yearly_counts.index:
         notes.append(
             "<div><b style='font-size:80%; color:#f44336;'>Partial Data Disclaimer:</b> "
-            "<span style='font-size:70%;'>Some 2025 incidents may not yet be reported, so trends for this year are still unfolding.</span></div>"
+            "<span style='font-size:70%;'>Some 2025 incidents may not yet be reported.</span></div>"
         )
 
-    # Example reflection on the dip in 2020
     if {2019, 2020, 2021}.issubset(yearly_counts.index):
         avg_around = (yearly_counts.loc[2019] + yearly_counts.loc[2021]) / 2
         if avg_around and yearly_counts.loc[2020] < (avg_around * 0.8):
             notes.append(
                 "<div><b style='font-size:80%; color:#f44336;'>Pandemic Impact:</b> "
-                "<span style='font-size:70%;'>A noticeable dip in 2020 may reflect school closures or underreporting during the pandemic.</span></div>"
+                "<span style='font-size:70%;'>A noticeable dip in 2020 may reflect school closures or underreporting.</span></div>"
             )
 
     notes_html = "".join(notes)
-
     html_obs = f"""
     <p style="font-size:90%;"><b>Yearly Trend Analysis:</b></p>
     <div style="font-size:90%;">
@@ -661,19 +729,14 @@ def generate_yearly_trend_observations(df: pd.DataFrame) -> str:
     </div>
     <p style="font-size:90%;">
         Overall, this chart helps contextualize how incidents have evolved over time.
-        A rising trend may indicate worsening circumstances or better reporting, while 
-        decreases might reflect successful interventions or external factors.
+        Rising trends may indicate worsening circumstances or better reporting, 
+        while decreases might reflect interventions or external factors.
     </p>
     """
     return html_obs
 
-
 def generate_monthly_trend_observations(df: pd.DataFrame) -> str:
-    """
-    Generates a storytelling HTML snippet with observations on monthly trends.
-    This highlights the highest and lowest incidence months and discusses
-    potential reasons behind seasonal or monthly fluctuations.
-    """
+    # (same as before)
     if df.empty:
         return "<p><em>No monthly data available to share the story.</em></p>"
 
@@ -692,49 +755,36 @@ def generate_monthly_trend_observations(df: pd.DataFrame) -> str:
     <ul style="font-size: 90%;">
         <li><b style="font-size: 80%; color: #f44336;">Highest Activity:</b>
             <span style="font-size:70%;">
-                {top_month} logged {top_count} incidents, possibly reflecting factors 
-                like school in-session schedules or significant local events.
+                {top_month} logged {top_count} incidents, possibly reflecting school schedules or local events.
             </span>
         </li>
         <li><b style="font-size: 80%; color: #f44336;">Lowest Activity:</b>
             <span style="font-size:70%;">
-                {bottom_month} had only {bottom_count} incidents, which could coincide 
-                with holiday breaks or other cyclical slowdowns.
+                {bottom_month} had {bottom_count} incidents, which could coincide with breaks or seasonal slowdowns.
             </span>
         </li>
         <li><b style="font-size: 80%; color: #f44336;">Total Records Analyzed:</b>
             <span style="font-size:70%;">{total_incidents} incidents across all months.</span>
         </li>
     </ul>
-    <p style="font-size:90%;">
-        These monthly variations may hint at seasonal effects, school calendars, or 
-        broader societal patterns influencing when incidents are most likely to occur.
-    </p>
     """
     return html_obs
 
-
 def generate_distribution_observations(df: pd.DataFrame) -> str:
-    """
-    Generates a narrative HTML snippet about distribution of Intent and Outcome.
-    Provides context on the most common motives or outcomes and how they
-    shape our understanding of the data.
-    """
+    # (same as before)
     if df.empty:
         return "<p><em>No distribution data available to reflect upon.</em></p>"
 
     intent_counts = df['Intent'].value_counts()
     outcome_counts = df['Outcome'].value_counts()
 
-    # Build lines for the top intent and top outcome
     intent_line = ""
     if not intent_counts.empty:
         top_intent = intent_counts.idxmax()
         intent_pct = (intent_counts[top_intent] / intent_counts.sum() * 100)
         intent_line = (
             f"<li><b style='font-size:80%; color:#f44336;'>Most Common Intent:</b> "
-            f"<span style='font-size:70%;'>{top_intent}</span> "
-            f"(~{intent_pct:.1f}% of all cases)</li>"
+            f"<span style='font-size:70%;'>{top_intent}</span> (~{intent_pct:.1f}% of all cases)</li>"
         )
 
     outcome_line = ""
@@ -743,12 +793,11 @@ def generate_distribution_observations(df: pd.DataFrame) -> str:
         outcome_pct = (outcome_counts[top_outcome] / outcome_counts.sum() * 100)
         outcome_line = (
             f"<li><b style='font-size:80%; color:#f44336;'>Most Common Outcome:</b> "
-            f"<span style='font-size:70%;'>{top_outcome}</span> "
-            f"(~{outcome_pct:.1f}% of reported outcomes)</li>"
+            f"<span style='font-size:70%;'>{top_outcome}</span> (~{outcome_pct:.1f}% of outcomes)</li>"
         )
 
     if not intent_line and not outcome_line:
-        return "<p><em>No distribution observations can be drawn due to insufficient data.</em></p>"
+        return "<p><em>No distribution observations can be drawn.</em></p>"
 
     html_obs = f"""
     <p style="font-size: 90%;"><b>Distribution Insights: Intent & Outcome</b></p>
@@ -756,21 +805,11 @@ def generate_distribution_observations(df: pd.DataFrame) -> str:
         {intent_line}
         {outcome_line}
     </ul>
-    <p style="font-size:90%;">
-        Understanding the distribution of intentions and outcomes provides a clearer 
-        picture of how and why these incidents occur, potentially guiding targeted 
-        interventions or policy measures. 
-    </p>
     """
     return html_obs
 
-
 def generate_heatmap_observations(df: pd.DataFrame) -> str:
-    """
-    Generates a narrative HTML snippet with insights from the heatmap (Intent vs. Outcome).
-    Explains which Intent-Outcome combination appears most frequently and interprets
-    what that might signify about real-world circumstances.
-    """
+    # (same as before)
     if df.empty:
         return "<p><em>No data available to extract heatmap insights.</em></p>"
 
@@ -783,37 +822,65 @@ def generate_heatmap_observations(df: pd.DataFrame) -> str:
     if melted.empty or melted['Count'].max() == 0:
         return "<p><em>No significant patterns to report in the heatmap.</em></p>"
 
-    # Top combination
     top_combo = melted.iloc[0]
-    intent_name = top_combo['Intent']
-    outcome_name = top_combo['Outcome']
-    combo_count = int(top_combo['Count'])
-
     html_obs = f"""
     <p style="font-size: 90%;"><b>Heatmap Interpretation: Intent vs. Outcome</b></p>
     <ul style="font-size: 90%;">
         <li><b style="font-size:80%; color:#f44336;">Dominant Pattern:</b>
             <span style="font-size:70%;">
-                The combination of Intent: <i>{intent_name}</i> and Outcome: <i>{outcome_name}</i> 
-                appears most frequently, with {combo_count} incidents recorded.
+                Intent: <i>{top_combo['Intent']}</i> and Outcome: <i>{top_combo['Outcome']}</i> 
+                appear most frequently with {int(top_combo['Count'])} incidents.
+            </span>
+        </li>
+    </ul>
+    """
+    return html_obs
+
+def generate_day_of_week_observations(df: pd.DataFrame) -> str:
+    """
+    Observations about the day-of-week chart, explaining possible weekday vs. weekend patterns.
+    """
+    if df.empty:
+        return "<p><em>No data available for day-of-week observations.</em></p>"
+
+    # We can highlight the busiest or quietest day
+    df['Total_Casualties'] = df['Number Killed'] + df['Number Wounded']
+    day_order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+    # For a quick snippet, let's get the top day for incidents
+    incidents_by_day = df.groupby("DayOfWeek").size()
+    incidents_by_day = incidents_by_day.reindex(day_order, fill_value=0)
+    top_day_inc = incidents_by_day.idxmax()
+    top_val_inc = incidents_by_day.max()
+
+    # Similarly for casualties
+    casualties_by_day = df.groupby("DayOfWeek")["Total_Casualties"].sum().reindex(day_order, fill_value=0)
+    top_day_cas = casualties_by_day.idxmax()
+    top_val_cas = casualties_by_day.max()
+
+    html_obs = f"""
+    <p style="font-size: 90%;"><b>Day-of-Week Observations:</b></p>
+    <ul style="font-size: 90%;">
+        <li><b style="font-size:80%; color:#f44336;">Highest Incident Day:</b>
+            <span style="font-size:70%;">
+                {top_day_inc} stands out with {top_val_inc} recorded incidents.
+            </span>
+        </li>
+        <li><b style="font-size:80%; color:#f44336;">Most Casualties Day:</b>
+            <span style="font-size:70%;">
+                {top_day_cas} reports the highest total casualties at {top_val_cas}.
             </span>
         </li>
     </ul>
     <p style="font-size:90%;">
-        This viewpoint reveals how certain motives align with specific outcomes more often 
-        than others, indicating possible risk factors or intervention points. 
-        Exploring less common pairings may also uncover unique scenarios worth further study.
+        Weekday vs. weekend differences can help highlight when campuses might need 
+        heightened safety measures or if after-school activities play a role.
     </p>
     """
     return html_obs
 
-
 def generate_statewise_observations(df: pd.DataFrame) -> str:
-    """
-    Generates a narrative HTML snippet with statewise insights. Highlights which states
-    bear the highest number of incidents, how that compares to the overall total,
-    and the top three states' combined contribution.
-    """
+    # (same as before)
     if df.empty:
         return "<p><em>No state data available for insights.</em></p>"
 
@@ -835,31 +902,20 @@ def generate_statewise_observations(df: pd.DataFrame) -> str:
         <li><b style="font-size:80%; color:#f44336;">Leading States:</b>
             <span style="font-size:70%;">
                 Top three states collectively: {", ".join(top_list)} — 
-                contributing ~{top3_pct:.1f}% of all incidents.
+                ~{top3_pct:.1f}% of all incidents.
             </span>
         </li>
         <li><b style="font-size:80%; color:#f44336;">Highest Concentration:</b>
             <span style="font-size:70%;">
-                {top_state} alone accounts for ~{top_state_pct:.1f}% 
-                ({top_state_count} incidents) of the dataset.
+                {top_state} alone contributes ~{top_state_pct:.1f}% ({top_state_count} incidents).
             </span>
         </li>
     </ul>
-    <p style="font-size:90%;">
-        States with higher counts might reflect larger populations, differing gun laws, 
-        or other localized factors. Further analysis could explore per-capita rates or 
-        demographic variables to provide deeper context.
-    </p>
     """
     return html_obs
 
-
 def generate_top_cities_observations(df: pd.DataFrame) -> str:
-    """
-    Generates a narrative HTML snippet with observations on top cities. Emphasizes
-    how concentrated incidents can be in certain urban areas and highlights the
-    other most impacted locations.
-    """
+    # (same as before)
     if df.empty:
         return "<p><em>No data available on top cities.</em></p>"
 
@@ -869,27 +925,52 @@ def generate_top_cities_observations(df: pd.DataFrame) -> str:
 
     top_city = city_counts.index[0]
     top_city_count = city_counts.iloc[0]
-    next_cities = city_counts.index[1:4]  # up to the next 3
+    next_cities = city_counts.index[1:4]
     next_cities_str = ", ".join(next_cities) if len(next_cities) > 0 else "None listed"
 
     html_obs = f"""
     <p style="font-size: 90%;"><b>City-Level Observations:</b></p>
     <ul style="font-size: 90%;">
         <li><b style="font-size:80%; color:#f44336;">Highest Incidence City:</b>
-            <span style="font-size:70%;">
-                {top_city} leads with {top_city_count} recorded incidents.
-            </span>
+            <span style="font-size:70%;">{top_city} leads with {top_city_count} recorded incidents.</span>
         </li>
         <li><b style="font-size:80%; color:#f44336;">Other Noteworthy Hubs:</b>
-            <span style="font-size:70%;">
-                {next_cities_str}
-            </span>
+            <span style="font-size:70%;">{next_cities_str}</span>
         </li>
     </ul>
+    """
+    return html_obs
+
+def generate_top_tragic_incidents_observation(df: pd.DataFrame) -> str:
+    if df.empty:
+        return "<p><em>No data available to reflect upon top tragic incidents.</em></p>"
+    html_obs = f"""
     <p style="font-size:90%;">
-        These city-specific patterns suggest that particular urban centers experience 
-        repeated incidents, possibly due to population density or localized risk factors. 
-        Identifying these hubs is crucial for targeted prevention strategies.
+        The table above highlights incidents with the highest total casualties, offering 
+        a stark look at events that had particularly severe outcomes. Examining these cases 
+        may reveal shared risk factors—like campus size, location type, or response times—
+        guiding targeted policies or practices to help prevent future tragedies.
+    </p>
+    """
+    return html_obs
+
+def generate_choropleth_observations(df: pd.DataFrame) -> str:
+    if df.empty:
+        return "<p><em>No data to display in choropleth observation.</em></p>"
+
+    state_counts = df['State_name'].value_counts()
+    if state_counts.empty:
+        return "<p><em>No data to reflect upon in choropleth view.</em></p>"
+
+    top_state = state_counts.index[0]
+    top_val = state_counts.iloc[0]
+    html_obs = f"""
+    <p style="font-size:90%;"><b>Choropleth Insights:</b></p>
+    <p style="font-size:90%;">
+        This map colors each state by the total number of incidents, with deeper hues
+        indicating higher counts. For instance, <b style="color:#f44336;">{top_state}</b>
+        has the highest count at <b>{top_val}</b> incidents. Hover over a state for its
+        specific data or compare patterns across regions. 
     </p>
     """
     return html_obs

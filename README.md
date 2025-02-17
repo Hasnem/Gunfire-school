@@ -2,6 +2,8 @@
 
 This repository contains a **Streamlit** dashboard for analyzing gunfire incidents on school grounds in the United States. It automatically fetches data from [Everytown Research](https://everytownresearch.org/maps/gunfire-on-school-grounds/) to give users real-time insights into the frequency, geographic spread, and outcomes of these tragic events.
 
+**🔗 [Live Dashboard](https://gunfire-school.streamlit.app/)**
+
 ## Table of Contents
 - [Overview](#overview)
 - [Key Features](#key-features)
@@ -67,7 +69,6 @@ By converting raw data into easily interpretable visuals, this project aspires t
 ---
 
 ## Project Structure
-
 
 - **app.py**  
   Main Streamlit application. Configures the layout, sidebar, and selects between the **Dashboard** and **About** page.

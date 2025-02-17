@@ -3,6 +3,7 @@ from PIL import Image
 
 # Local imports
 from about_page import about_page
+from utils.narrative_analysis import display_narrative_analysis
 from utils.data_loading import load_and_preprocess_data
 from utils.data_filters import apply_sidebar_filters, filter_by_min_casualties, export_filtered_data
 from utils.utils_common import display_header, display_latest_incident, metric_cards
@@ -139,6 +140,10 @@ def show_dashboard():
         fig_choro = plot_state_choropleth(df_filtered)
         st.plotly_chart(fig_choro, use_container_width=True)
         st.markdown(generate_choropleth_observations(df_filtered), unsafe_allow_html=True)
+
+
+    display_narrative_analysis(df_filtered)
+
 
 if __name__ == "__main__":
     main()

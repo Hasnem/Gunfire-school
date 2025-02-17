@@ -14,29 +14,30 @@ def about_page():
         <!-- Project Overview -->
         <h3 class="everytown-blue important">Project Motivation</h3>
         <p>
-          Gunfire on school grounds remains a pressing concern that calls for clear, data-driven insights. 
-          This dashboard draws upon 
+          Gunfire on school grounds is a stark reality that demands careful, data-driven attention.
+          This dashboard leverages
           <a href="https://everytownresearch.org/maps/gunfire-on-school-grounds/" class="source-link" target="_blank">
           Everytown Research</a>
-          to highlight the frequency, location, and nature of these incidents over time. 
-          By making these patterns visible, we aim to equip policymakers, educators, researchers, 
-          and the public with actionable knowledge to enhance school safety.
+          to illuminate the frequency, location, nature, and context of these incidents over time.
+          Our goal is to empower policymakers, educators, researchers, and the public with insights 
+          that inform strategies for safer schools.
         </p>
 
         <!-- Data Coverage & Story -->
         <h3 class="everytown-blue important">Our Data Story</h3>
         <p>
-          Each interactive chart provides a different lens on the data:
+          We present multiple interactive perspectives:
         </p>
         <ul>
-          <li><span class="everytown-red important">Yearly, Monthly, and Day-of-Week Trends</span> – Pinpoint temporal shifts and possible seasonal or day patterns.</li>
-          <li><span class="everytown-red important">Intent & Outcome Distribution</span> – Understand the nature of incidents, including motives and their aftermath.</li>
-          <li><span class="everytown-red important">Geographical Analyses</span> – Spot regional hotspots at both state and city levels, and examine potential policy or population factors.</li>
-          <li><span class="everytown-red important">Top Tragic Incidents</span> – Identify incidents with the highest casualties for deeper reflection and potential lessons.</li>
+          <li><span class="everytown-red important">Temporal Trends:</span> Yearly, monthly, and day-of-week patterns indicate shifts and possible seasonal effects.</li>
+          <li><span class="everytown-red important">Intent & Outcome Distributions:</span> Explore key contributing motives and impacts.</li>
+          <li><span class="everytown-red important">Geographical Overviews:</span> Track state-level hot spots and city-level concentrations.</li>
+          <li><span class="everytown-red important">Notable Incidents:</span> Highlight high-casualty events for deeper reflection and potential lessons.</li>
+          <li><span class="everytown-red important">Narrative Text Analysis:</span> Examine word clouds and age references for extra context on who’s involved and how.</li>
         </ul>
         <p>
-          By linking raw facts to dynamic visuals, our goal is to emphasize the real communities 
-          behind each statistic, prompting constructive dialogue and targeted solutions.
+          By connecting raw facts to dynamic visuals, we underscore the communities behind every data point, 
+          fostering constructive dialogue and more effective solutions.
         </p>
 
         <!-- Data Contents -->
@@ -45,66 +46,66 @@ def about_page():
           The dataset from Everytown includes:
         </p>
         <ul>
-          <li><span class="everytown-red important">Date, City, & State</span> – situating each event in time and space</li>
-          <li><span class="everytown-red important">Latitude/Longitude</span> – enabling precise mapping of incidents</li>
-          <li><span class="everytown-red important">Intent & Outcome</span> – revealing the nature and aftermath of each incident</li>
-          <li><span class="everytown-red important">Casualties (Killed & Wounded)</span> – quantifying the direct human toll</li>
-          <li><span class="everytown-red important">Narratives</span> – offering contextual background behind each incident</li>
+          <li><span class="everytown-red important">Date, City, & State</span> – placing each event in time and location</li>
+          <li><span class="everytown-red important">Latitude/Longitude</span> – supporting precise mapping</li>
+          <li><span class="everytown-red important">Intent & Outcome</span> – clarifying motives and consequences</li>
+          <li><span class="everytown-red important">Casualties (Killed & Wounded)</span> – capturing the direct toll</li>
+          <li><span class="everytown-red important">Narratives</span> – giving more context behind each incident</li>
         </ul>
 
         <!-- Methodology & Process -->
         <h3 class="everytown-blue important">Our Methodology & Process</h3>
         <p>
-          We fetch the latest CSV data directly from Everytown's site in near real time, 
-          and carry out key transformations:
+          We fetch near real-time CSV data from Everytown and transform it for analysis:
         </p>
         <ul>
           <li><span class="everytown-red important">Data Cleaning</span> – removing invalid coordinates and irrelevant fields</li>
-          <li><span class="everytown-red important">Column Enhancements</span> – creating new columns (Year, Month, Day-of-Week, etc.) for deeper analysis</li>
-          <li><span class="everytown-red important">Dynamic Filtering</span> – allowing users to refine the data by date range, state, intent, or a minimum casualties threshold</li>
-          <li><span class="everytown-red important">Interactive Visualizations</span> – plotting incidents, casualties, and distributions using 
-              <b>Plotly</b> and serving them through <b>Streamlit</b></li>
+          <li><span class="everytown-red important">Column Enhancements</span> – adding Year, Month, Day-of-Week, etc., for deeper insights</li>
+          <li><span class="everytown-red important">Dynamic Filtering</span> – refining the dataset by time range, state, intent, or casualties</li>
+          <li><span class="everytown-red important">Interactive Visualizations</span> – leveraging
+              <b>Plotly</b> and <b>Streamlit</b> for instant, filter-responsive charts 
+          </li>
+          <li><span class="everytown-red important">Narrative Analysis</span> – generating word clouds and extracting common ages mentioned</li>
         </ul>
         <p>
-          Every chart is dynamically updated based on user-selected filters, presenting 
-          the most relevant insights instantly. The underlying approach is transparent, 
-          letting the data speak while providing narrative context.
+          Each chart updates based on user filters, offering timely, customizable insight. 
+          Our goal is to let the data speak while adding just enough context for clarity.
         </p>
 
         <!-- Tools & Technology -->
         <h3 class="everytown-blue important">Tools & Technology</h3>
         <p>
-          <b>Streamlit</b> drives the dashboard's interactivity, 
-          <b>Pandas</b> handles data wrangling, and 
-          <b>Plotly</b> delivers the interactive graphs and maps. 
-          This combination ensures intuitive exploration and real-time updates without complex setup.
+          <b>Streamlit</b> drives the interactive interface,
+          <b>Pandas</b> powers data processing, and
+          <b>Plotly</b> produces engaging visualizations.
+          This combination keeps analysis flexible and responsive without heavy setup.
         </p>
 
         <!-- Limitations & Future Directions -->
         <h3 class="everytown-blue important">Limitations & Future Directions</h3>
         <ul>
-          <li><span class="everytown-red important">Partial Data</span> – Some years, such as 2025, may still be incomplete as incidents are confirmed or added.</li>
-          <li><span class="everytown-red important">Delayed Reporting</span> – Late or unverified incidents might not appear in the dataset immediately.</li>
-          <li><span class="everytown-red important">Geographic Accuracy</span> – Missing or approximate coordinates can affect the precision of maps.</li>
-          <li><span class="everytown-red important">Further Enhancements</span> – Incorporating demographic or policy data could uncover deeper correlations (e.g., legislative context, population density).</li>
+          <li><span class="everytown-red important">Partial Data</span> – Some recent years (e.g., 2025) may be incomplete as incidents await verification.</li>
+          <li><span class="everytown-red important">Delayed Reporting</span> – Late or unverified cases can slip through or appear after the fact.</li>
+          <li><span class="everytown-red important">Geographic Accuracy</span> – Missing or approximate coordinates may affect map precision.</li>
+          <li><span class="everytown-red important">Expanded Analysis</span> – Integrating policy or demographic data (e.g., local gun laws, population densities) could reveal deeper correlations.</li>
         </ul>
 
-        <!-- Overall Mission -->
+        <!-- Why It Matters -->
         <h3 class="everytown-blue important">Why This Matters</h3>
         <p>
-          Each data point represents a real-world tragedy, reminding us that preventative strategies 
-          and informed policies are crucial. By highlighting patterns—when, where, and how these 
-          incidents occur—the dashboard encourages data-driven conversations about how to protect 
-          students, educators, and communities.
+          Each entry in this dataset represents a tragic real-world occurrence, underscoring the need 
+          for evidence-based prevention and policies. By spotlighting recurring patterns—timing, locations, 
+          and contributing factors—the dashboard encourages informed discussions on enhancing safety 
+          for students and educators alike.
         </p>
 
         <!-- Call to Action -->
         <h3 class="everytown-blue important">Call to Action</h3>
         <p>
-          We invite you to explore the trends, filters, and observations to glean insights 
-          into possible preventive measures and resource allocations. 
-          Only through awareness and collaboration can we hope to reduce these incidents 
-          and maintain safer learning environments for everyone.
+          We encourage you to explore the visuals, adjust the filters, and delve into observations 
+          on intent, geography, and textual narratives. Data alone can’t solve the issue, but 
+          transparency and informed debate form a critical step in developing effective strategies 
+          for safer school communities.
         </p>
         """,
         unsafe_allow_html=True

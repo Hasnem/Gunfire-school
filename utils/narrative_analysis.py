@@ -2,267 +2,249 @@
 """
 Narrative Analysis Module
 
-Features:
-  1) Word Cloud of most common words in 'Narrative' (Plotly-based)
-  2) Age distribution from "X-year-old" references (Plotly-based)
-  3) Clear disclaimers about the limitations of textual data.
+Analyzes text descriptions of incidents to extract patterns and insights.
+Focuses on clear, actionable findings from narrative data.
 """
 
 import re
-import io
 import pandas as pd
+import numpy as np
 import streamlit as st
-import plotly.express as px
 import plotly.graph_objects as go
-
 from collections import Counter
 from wordcloud import WordCloud
+import base64
+from io import BytesIO
+from utils.utils_common import display_metric_card, display_info_box, COLORS
 
 
 def display_narrative_analysis(df: pd.DataFrame):
     """
-    Main function to render all narrative-based analyses:
-      - Word Cloud visualization
-      - Age extraction and histogram
-      - Observations & disclaimers for each
+    Main entry point for narrative analysis section.
     """
     if df.empty or "Narrative" not in df.columns:
-        st.warning("No 'Narrative' data is available.")
+        st.warning("No narrative data available for analysis.")
         return
 
-    st.markdown("<h2>Narrative Analysis</h2>", unsafe_allow_html=True)
-    st.divider()
-
-    # 1) Word Cloud
-    st.markdown("<h3>1. Word Cloud of Common Terms</h3>", unsafe_allow_html=True)
-    plot_narrative_wordcloud(df)
-    st.markdown(generate_wordcloud_observation(df), unsafe_allow_html=True)
-    st.divider()
-
-    # 2) Age Mentions
-    st.markdown('<h3>2. Age Mentions ("X-year-old")</h3>', unsafe_allow_html=True)
-    plot_age_distribution(df)
-    st.markdown(generate_age_distribution_observation(df), unsafe_allow_html=True)
-
-
-# -----------------------------------------------------------------------------
-# 1) WORD CLOUD
-# -----------------------------------------------------------------------------
-
-def plot_narrative_wordcloud(df: pd.DataFrame, max_words: int = 200):
-    """
-    Build a word cloud from the 'Narrative' text, then embed it into a Plotly figure
-    so it fits the dashboard's overall style.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        The filtered dataset containing a 'Narrative' column.
-    max_words : int, optional
-        The maximum number of words to display in the cloud. Defaults to 200.
-    """
-    narratives = df["Narrative"].dropna().astype(str)
+    narratives = df["Narrative"].dropna()
     if narratives.empty:
-        st.info("No valid 'Narrative' text found.")
+        st.info("No narrative descriptions found in the current data selection.")
         return
 
-    # Combine all narratives into one string (lowercased)
-    combined_text = " ".join(narratives).lower()
+    # Show coverage metrics
+    st.markdown("### 📝 Narrative Analysis")
+    display_coverage_metrics(df, narratives)
+    
+    # Create simple two-tab layout
+    tab1, tab2 = st.tabs(["📊 Key Words & Themes", "👥 People Mentioned"])
+    
+    with tab1:
+        display_word_analysis(narratives)
+    
+    with tab2:
+        display_people_analysis(narratives)
 
-    # Find words of length >=3 (so we skip 'a', 'an', 'the', etc.)
-    words = re.findall(r'\b[a-z]{3,}\b', combined_text)
 
-    # Minimal stopwords (expand as needed)
+def display_coverage_metrics(df: pd.DataFrame, narratives: pd.Series):
+    """Show simple metrics about narrative data availability."""
+    
+    total_incidents = len(df)
+    with_narratives = len(narratives)
+    coverage_rate = (with_narratives / total_incidents * 100) if total_incidents > 0 else 0
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Narrative Coverage", f"{coverage_rate:.0f}%", 
+                  help="Percentage of incidents with text descriptions")
+    
+    with col2:
+        st.metric("Total Narratives", f"{with_narratives:,}")
+    
+    with col3:
+        avg_length = int(narratives.str.len().mean())
+        st.metric("Avg Length", f"{avg_length} chars")
+
+
+def display_word_analysis(narratives: pd.Series):
+    """Analyze and display common words and themes from narratives."""
+    
+    st.markdown("#### What the Narratives Tell Us")
+    
+    # Process all narrative text
+    all_text = " ".join(narratives.astype(str)).lower()
+    
+    # Extract meaningful words (4+ letters, exclude common words)
+    words = re.findall(r'\b[a-z]{4,}\b', all_text)
+    
+    # Common words to exclude (expanded list for cleaner results)
     stopwords = {
-        "the","and","for","with","that","have","from","this","was","were","when",
-        "what","there","which","been","into","while","could","also","after","such",
-        "they","their","them","where","would","should","about","very","many","said",
-        "those","being","some","other","these","every","your","having","them"
+        'the', 'and', 'for', 'with', 'that', 'have', 'from', 'this', 'was', 'were',
+        'when', 'what', 'there', 'which', 'been', 'into', 'while', 'could', 'also',
+        'after', 'they', 'their', 'them', 'where', 'would', 'about', 'school', 
+        'student', 'students', 'campus', 'year', 'reported', 'police', 'said',
+        'incident', 'found', 'near', 'during', 'time', 'area', 'located'
     }
-    filtered_words = [w for w in words if w not in stopwords]
-    if not filtered_words:
-        st.info("No significant words found after removing common filler words.")
+    
+    meaningful_words = [w for w in words if w not in stopwords]
+    
+    if not meaningful_words:
+        st.info("No significant word patterns found.")
         return
-
-    # Count frequencies
-    freq_dict = Counter(filtered_words)
-
-    # Generate the word cloud image using the "Blues" colormap
-    wc = WordCloud(
-        width=800,
-        height=400,
-        background_color="white",
-        colormap="Blues",
-        max_words=max_words
-    ).generate_from_frequencies(freq_dict)
-
-    # Convert the WordCloud to an array (RGB) that we can embed in Plotly
-    wc_img = wc.to_array()
-
-    # Create a blank Plotly figure and add the word cloud image
-    fig = go.Figure()
-
-    # We embed the NumPy array as an image in the layout
-    fig.add_layout_image(
-        dict(
-            source=px.imshow(wc_img).data[0].source,
-            xref="paper",
-            yref="paper",
-            x=0,
-            y=1,
-            sizex=1,
-            sizey=1,
-            xanchor="left",
-            yanchor="top",
-            sizing="stretch",
-            layer="below"
+    
+    # Count word frequencies
+    word_freq = Counter(meaningful_words)
+    top_20 = word_freq.most_common(20)
+    
+    # Create simple word cloud
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown("##### Word Cloud")
+        
+        # Generate word cloud
+        wc = WordCloud(
+            width=600,
+            height=300,
+            background_color="white",
+            colormap="Blues",
+            max_words=50,
+            relative_scaling=0.7,
+            min_font_size=14
+        ).generate_from_frequencies(dict(top_20))
+        
+        # Convert to image and display
+        img = wc.to_image()
+        buffered = BytesIO()
+        img.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        
+        st.markdown(
+            f'<div style="text-align: center;">'
+            f'<img src="data:image/png;base64,{img_str}" style="max-width: 100%;">'
+            f'</div>',
+            unsafe_allow_html=True
         )
-    )
-
-    # Hide axes, set a minimal margin
-    fig.update_xaxes(visible=False)
-    fig.update_yaxes(visible=False)
-    fig.update_layout(
-        width=800,
-        height=400,
-        margin=dict(l=0, r=0, t=30, b=0),
-        paper_bgcolor="white"
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
-
-def generate_wordcloud_observation(df: pd.DataFrame) -> str:
-    """
-    Provide textual insights about the word cloud.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-
-    Returns
-    -------
-    str
-        HTML snippet with observations and disclaimers.
-    """
-    n_narratives = df["Narrative"].dropna().shape[0]
-    if n_narratives == 0:
-        return "<p>No narratives to discuss.</p>"
-
-    return f"""
-    <p style="font-size:90%;">
-      <b>Observations:</b><br/>
-      We analyzed <b>{n_narratives}</b> narratives to generate this word cloud. 
-      The largest words in the cloud appear most frequently in the text, 
-      hinting at recurring storylines (e.g., <i>gun</i>, <i>shooting</i>, 
-      <i>student</i>, <i>police</i>). High-frequency words can reflect the 
-      key issues or circumstances surrounding these incidents, though they 
-      won't tell the full story by themselves.<br/><br/>
-      By scanning these commonly used terms, readers can quickly grasp 
-      overarching themes—like arguments in school parking lots or 
-      ongoing campus security challenges—warranting deeper exploration.
-    </p>
-    """
+    
+    with col2:
+        st.markdown("##### Top 10 Words")
+        for word, count in top_20[:10]:
+            pct = (count / len(meaningful_words) * 100)
+            st.markdown(f"**{word}** ({count} times)")
+    
+    # Key themes analysis
+    st.markdown("##### Key Themes Found")
+    
+    # Simple theme detection
+    themes = {
+        '🔫 Weapons': ['gun', 'firearm', 'weapon', 'pistol', 'rifle', 'shot'],
+        '📍 Locations': ['parking', 'classroom', 'hallway', 'cafeteria', 'field'],
+        '⏰ Timing': ['morning', 'afternoon', 'evening', 'before', 'after'],
+        '👮 Response': ['arrested', 'custody', 'hospital', 'transported']
+    }
+    
+    theme_counts = {}
+    for theme_name, keywords in themes.items():
+        count = sum(all_text.count(keyword) for keyword in keywords)
+        if count > 0:
+            theme_counts[theme_name] = count
+    
+    if theme_counts:
+        # Display themes in a clean grid
+        cols = st.columns(len(theme_counts))
+        for i, (theme, count) in enumerate(theme_counts.items()):
+            with cols[i]:
+                st.metric(theme, count, "mentions")
 
 
-# -----------------------------------------------------------------------------
-# 2) AGE MENTIONS
-# -----------------------------------------------------------------------------
-
-def plot_age_distribution(df: pd.DataFrame):
-    """
-    Parses all 'Narrative' text for patterns like "16-year-old" and plots a histogram.
-    For a consistent look-and-feel, we use Plotly and the 'Blues' color scheme.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        The filtered dataset with a 'Narrative' column.
-    """
-    narratives = df["Narrative"].dropna().astype(str)
-    if narratives.empty:
-        st.info("No valid 'Narrative' text available.")
+def display_people_analysis(narratives: pd.Series):
+    """Analyze age mentions in narratives."""
+    
+    st.markdown("#### Ages Mentioned in Narratives")
+    
+    # Extract age mentions (e.g., "17-year-old")
+    age_pattern = re.compile(r'(\d{1,2})-year-old', re.IGNORECASE)
+    age_mentions = []
+    
+    for narrative in narratives:
+        ages = age_pattern.findall(str(narrative))
+        age_mentions.extend([int(age) for age in ages if 5 <= int(age) <= 65])
+    
+    if not age_mentions:
+        st.info("No age references found in the narratives.")
         return
-
-    # Extract any 'X-year-old' references
-    pattern = re.compile(r'\b(\d{1,2})-year-old\b', re.IGNORECASE)
-    extracted_ages = []
-
-    for text in narratives:
-        matches = pattern.findall(text)
-        extracted_ages.extend(int(age_str) for age_str in matches)
-
-    if not extracted_ages:
-        st.info("No 'X-year-old' references found in these narratives.")
-        return
-
-    age_series = pd.Series(extracted_ages, name="Ages")
-    total_mentions = len(extracted_ages)
-    avg_age = age_series.mean()
-    median_age = age_series.median()
-
-    # Display quick stats
-    c1, c2, c3 = st.columns(3)
-    c1.metric("References Found", f"{total_mentions}")
-    c2.metric("Avg Age", f"{avg_age:.1f}")
-    c3.metric("Median Age", f"{median_age:.1f}")
-
-    # Top 5 most-mentioned ages
-    top5 = age_series.value_counts().head(5).rename("Count")
-    st.subheader("5 Most-Mentioned Ages")
-    st.table(top5)
-
-    # Build a Plotly histogram
-    fig = px.histogram(
-        age_series,
-        x="Ages",
-        nbins=20,
-        title="Distribution of 'X-year-old' Mentions in Narratives",
-        color_discrete_sequence=["#094486"]  # a deep "Blues" tone
+    
+    # Create age dataframe
+    age_df = pd.DataFrame(age_mentions, columns=['Age'])
+    
+    # Summary statistics
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Total Age References", len(age_mentions))
+    
+    with col2:
+        st.metric("Average Age", f"{age_df['Age'].mean():.0f} years")
+    
+    with col3:
+        most_common = age_df['Age'].mode().iloc[0] if not age_df.empty else 0
+        st.metric("Most Common Age", f"{most_common} years")
+    
+    # Age distribution chart
+    st.markdown("##### Age Distribution")
+    
+    # Create histogram
+    fig = go.Figure()
+    
+    fig.add_trace(go.Histogram(
+        x=age_df['Age'],
+        nbinsx=20,
+        marker_color=COLORS['primary'],
+        hovertemplate='Age: %{x}<br>Count: %{y}<extra></extra>'
+    ))
+    
+    # Add average line
+    avg_age = age_df['Age'].mean()
+    fig.add_vline(
+        x=avg_age,
+        line_dash="dash",
+        line_color=COLORS['accent'],
+        annotation_text=f"Avg: {avg_age:.0f}",
+        annotation_position="top right"
     )
+    
     fig.update_layout(
-        xaxis_title="Age (as mentioned in text)",
-        yaxis_title="Count of Mentions",
-        bargap=0.1,
-        margin=dict(l=0, r=0, t=80, b=0)
+        xaxis_title="Age (years)",
+        yaxis_title="Number of Mentions",
+        height=300,
+        showlegend=False,
+        plot_bgcolor='white'
     )
+    
     st.plotly_chart(fig, use_container_width=True)
-
-
-def generate_age_distribution_observation(df: pd.DataFrame) -> str:
-    """
-    Create a short explanatory HTML snippet for the Age Distribution chart,
-    clarifying that we don't know if these ages are suspects, victims, or others.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-
-    Returns
-    -------
-    str
-        HTML snippet with disclaimers and potential interpretations.
-    """
-    pattern = re.compile(r'\b(\d{1,2})-year-old\b', re.IGNORECASE)
-    combined_text = " ".join(df["Narrative"].dropna().astype(str))
-    mentions = pattern.findall(combined_text)
-    if not mentions:
-        return "<p>No age references to analyze.</p>"
-
-    total_references = len(mentions)
-    return f"""
-    <p style="font-size:90%;">
-      <b>Observations & Disclaimers:</b><br/>
-      In total, we detected <b>{total_references}</b> references to “X-year-old”
-      across the narratives. However, these mentions do not indicate whether
-      the individuals cited were victims, suspects, bystanders, or otherwise
-      involved. Some incidents include multiple ages (e.g., both the shooter
-      and victims), potentially skewing the data.<br/><br/>
-      Repeated references to certain ages—like 16 or 17—might suggest 
-      teenagers are frequently involved, but additional details would be needed
-      to distinguish their specific roles or motivations. For a comprehensive
-      understanding, we recommend looking beyond these numeric hints and
-      considering the incident context, outcomes, and any available 
-      investigative reports.
-    </p>
-    """
+    
+    # Age group summary
+    st.markdown("##### Age Groups")
+    
+    # Define age groups
+    age_groups = pd.cut(
+        age_df['Age'],
+        bins=[0, 12, 17, 25, 100],
+        labels=['Children (≤12)', 'Teens (13-17)', 'Young Adults (18-25)', 'Adults (>25)']
+    )
+    
+    group_counts = age_groups.value_counts()
+    
+    # Display as simple metrics
+    cols = st.columns(len(group_counts))
+    for i, (group, count) in enumerate(group_counts.items()):
+        with cols[i]:
+            pct = (count / len(age_df) * 100)
+            st.metric(group, f"{pct:.0f}%", f"{count} mentions")
+    
+    # Note about interpretation
+    st.info(
+        "💡 **Note:** Age mentions in narratives may refer to victims, suspects, "
+        "or witnesses. These numbers provide context but should not be interpreted "
+        "as definitive demographic data."
+    )

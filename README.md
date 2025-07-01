@@ -1,84 +1,146 @@
-# Gunfire on School Grounds Dashboard
+# School Gun Violence Dashboard
 
-This repository contains a **Streamlit** dashboard for analyzing gunfire incidents on school grounds in the United States. It automatically fetches data from [Everytown Research](https://everytownresearch.org/maps/gunfire-on-school-grounds/) to give users real-time insights into the frequency, geographic spread, and outcomes of these tragic events.
+A comprehensive data analysis dashboard tracking gun-related incidents on school grounds across the United States. Built with Streamlit and powered by data from [Everytown Research](https://everytownresearch.org/maps/gunfire-on-school-grounds/).
 
 **🔗 [Live Dashboard](https://gunfire-school.streamlit.app/)**
 
-## Table of Contents
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Data Source & Scope](#data-source--scope)
-- [Project Structure](#project-structure)
----
-
 ## Overview
 
-Gun-related violence on school grounds is a critical issue that affects students, educators, and communities. This dashboard aims to:
+This dashboard transforms raw incident data into actionable insights, helping policymakers, educators, researchers, and communities understand patterns and trends in school gun violence to inform prevention strategies.
 
-- Present **yearly and monthly trends** to illustrate how incidents have evolved over time.
-- Provide **interactive filtering** for deeper insights into specific states, time frames, or types of incidents (intent).
-- Highlight **key metrics**, including total incidents, lives lost, and injuries.
-- Offer **visual context** via maps and charts, illuminating where and how these incidents occur most frequently.
+## Features
 
-By converting raw data into easily interpretable visuals, this project aspires to inform researchers, policymakers, educators, and the general public, guiding meaningful conversations and potential preventative measures.
+### 📊 Real-Time Data Analysis
+- Automatically fetches and processes the latest incident data
+- Interactive filters by time period, location, and severity
+- Dynamic visualizations that update based on selections
 
----
+### 📈 Comprehensive Analytics
+- **Temporal Trends**: Yearly, monthly, and weekly patterns
+- **Geographic Insights**: State and city-level analysis with heat maps
+- **Severity Assessment**: Casualty statistics and incident classifications
+- **Narrative Analysis**: Text mining of incident descriptions
 
-## Key Features
+### 📑 Reporting Capabilities
+- Generate executive reports in HTML format
+- Export filtered data for further analysis
+- Print-friendly layouts for presentations
 
-1. **Interactive Filters**  
-   - Select specific states, adjust date ranges, and filter by intent type.  
-   - All charts and metrics update instantly to reflect your filter selections.
+## Quick Start
 
-2. **Dynamic Metrics**  
-   - At-a-glance figures for total incidents, casualties, killed, and wounded.  
-   - Quickly gauge the scope of impact based on chosen filters.
+### Prerequisites
+- Python 3.8+
+- pip (Python package manager)
 
-3. **Latest Incident Highlights**  
-   - A concise summary pinpoints the most recent recorded incident in the sidebar.
+### Installation
 
-4. **Trend Analysis**  
-   - **Yearly Trends**: Track how incident counts and casualties shift over time.  
-   - **Monthly Trends**: Identify potential seasonal or academic factors.
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/school-gun-violence-dashboard.git
+cd school-gun-violence-dashboard
+```
 
-5. **Distribution & Heatmap**  
-   - **Bar Charts**: Reveal the breakdown of outcomes (killed vs. wounded) and intent.  
-   - **Heatmap**: Visualize the intersection of intent vs. outcome.
+2. Create a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-6. **Geographic Visualization**  
-   - **Statewise Bar Chart**: Compare incident counts across states.  
-   - **US Map**: Choose between a bubble scatter map or a choropleth to see incident hotspots.
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-7. **Top Cities & Tragic Incidents**  
-   - Identify which cities have the highest reported incidents.
-   - A quick rundown of the most tragic incidents for deeper context.
+4. Run the dashboard:
+```bash
+streamlit run app.py
+```
 
----
-
-## Data Source & Scope
-
-- **Primary Data Source**:  
-  [Everytown Research – Gunfire on School Grounds](https://everytownresearch.org/maps/gunfire-on-school-grounds/)  
-  The data includes incident date, location, intent, and casualties, updated by Everytown on a rolling basis.
-
-- **Scope & Limitations**:  
-  - Data may be **partial** for recent years (e.g., 2025) as incidents might be newly reported or under investigation.  
-  - **Geographic coordinates** can be missing or approximate for select records.  
-  - Reflects **reported incidents** only; actual events may be underreported.
-
----
+The dashboard will open in your default browser at `http://localhost:8501`
 
 ## Project Structure
 
-- **app.py**  
-  Main Streamlit application. Configures the layout, sidebar, and selects between the **Dashboard** and **About** page.
-- **about_page.py**  
-  A simple page that provides additional background or context about the project.
-- **utils/**  
-  - **data_loading.py**: Functions to fetch and preprocess the dataset.  
-  - **data_filters.py**: Sidebar-based filtering logic.  
-  - **utils_common.py**: Common functions, such as displaying headers or metric cards.  
-  - **charts.py**: Various Plotly chart functions.  
-  - **observations.py**: Dynamically generated text or insights based on the filtered data.
+```
+├── app.py                 # Main application entry point
+├── about_page.py         # About page content
+├── requirements.txt      # Python dependencies
+├── utils/
+│   ├── charts.py         # Visualization functions
+│   ├── data_filters.py   # Data filtering logic
+│   ├── data_loading.py   # Data fetching and preprocessing
+│   ├── executive_report.py # Report generation
+│   ├── narrative_analysis.py # Text analysis
+│   ├── observations.py   # Insight generation
+│   └── utils_common.py   # Shared utilities
+└── README.md
+```
+
+## Usage Guide
+
+### 1. Filtering Data
+Use the sidebar to filter by:
+- **Time Period**: Date ranges or specific years
+- **Location**: Individual states or top N states
+- **Severity**: All incidents, casualties only, or fatal incidents
+
+### 2. Exploring Tabs
+- **Trends**: Analyze patterns over time
+- **Geography**: Explore spatial distributions
+- **Severity**: Understand incident impacts
+- **Narratives**: Extract insights from descriptions
+
+### 3. Generating Reports
+Click "Executive Report" in the navigation to create comprehensive PDF summaries with your selected data.
+
+## Data Source
+
+This dashboard uses publicly available data from [Everytown Research](https://everytownresearch.org/maps/gunfire-on-school-grounds/), which tracks incidents where a firearm was brandished, fired, or a bullet hit school property.
+
+### Data Includes:
+- Incident date and location
+- School information
+- Casualty counts
+- Intent and outcome classifications
+- Narrative descriptions
+
+### Important Notes:
+- Current year data is incomplete and continuously updated
+- Some records may have missing geographic or narrative information
+- Data reflects reported incidents only
+
+## Technologies Used
+
+- **[Streamlit](https://streamlit.io/)**: Web application framework
+- **[Pandas](https://pandas.pydata.org/)**: Data manipulation
+- **[Plotly](https://plotly.com/)**: Interactive visualizations
+- **[NLTK](https://www.nltk.org/)**: Natural language processing
+- **[WordCloud](https://github.com/amueller/word_cloud)**: Text visualization
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+### Development Setup
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- **Data Source**: [Everytown Research](https://everytownresearch.org/) for maintaining comprehensive incident data
+- **Community**: All contributors and users working toward safer schools
+
+## Contact
+
+For questions, suggestions, or collaborations, please open an issue on GitHub.
 
 ---
+
+**Disclaimer**: This is an independent analysis tool. For the most current information and research, please visit [Everytown Research](https://everytownresearch.org/).

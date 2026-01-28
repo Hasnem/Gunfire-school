@@ -95,7 +95,7 @@ This project delivers an **end-to-end analytics and decision-support solution** 
 
 ## 📄 Executive Report (HTML)
 
-📊 **[View Sample Executive Report](./assets/sample_executive_report.html)**
+📊 **[View Sample Executive Report](./docs/sample_executive_report.html)**
 
 The automated executive report is designed for **policy briefings and leadership review**, featuring:
 

@@ -6,3 +6,7 @@ venv/
 .env
 attachments/
 backup/
+
+# Ignore generated reports (except sample in assets/)
+school_violence_report_*.html
+!assets/sample_executive_report.html

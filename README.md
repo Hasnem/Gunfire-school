@@ -109,9 +109,23 @@ This project simulates a production-grade **ETL (Extract, Transform, Load)** pip
 
 ---
 
-## 📸 Dashboard Preview
+## 📸 Dashboard Preview & Sample Output
 
-> *Note: Screenshots illustrate the dashboard's capabilities for prospective employers.*
+### Executive Report Sample
+📄 **[View Sample Executive Report](./assets/sample_executive_report.html)** - A production-ready HTML report demonstrating:
+- Data Quality Indicators (100% completeness score)
+- Executive Summary with key metrics
+- Trend Analysis with year-over-year comparisons
+- Geographic insights and recommendations
+- Professional CSS styling for stakeholder presentations
+
+### Dashboard Screenshots
+
+> **To add screenshots**: 
+> 1. Run the dashboard locally (`streamlit run app.py`)
+> 2. Take screenshots of key views
+> 3. Save them in the `assets/` folder
+> 4. Replace the placeholders below with: `![Description](./assets/your-screenshot.png)`
 
 **(Placeholder: Insert Main Dashboard View Here)**
 *Real-time interface showing key metric cards and map visualization.*

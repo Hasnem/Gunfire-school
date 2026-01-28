@@ -107,13 +107,13 @@ def apply_time_filters(df: pd.DataFrame) -> pd.DataFrame:
             # Quick selections
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("School Months", use_container_width=True):
+                if st.button("School Months", width='stretch'):
                     selected_months = ['Sep', 'Oct', 'Nov', 'Dec', 
                                      'Jan', 'Feb', 'Mar', 'Apr', 'May']
                 else:
                     selected_months = None
             with col2:
-                if st.button("Summer", use_container_width=True):
+                if st.button("Summer", width='stretch'):
                     selected_months = ['Jun', 'Jul', 'Aug']
                 else:
                     selected_months = None

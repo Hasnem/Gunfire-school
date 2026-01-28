@@ -52,7 +52,7 @@ def main():
         # Add logo if available
         try:
             logo = Image.open("Everytown_final_logo.png")
-            st.image(logo, use_container_width=True)
+            st.image(logo, width='stretch')
         except:
             pass
     
@@ -161,7 +161,7 @@ def show_trends_tab(df: pd.DataFrame):
     # Yearly trend
     st.markdown("### Annual Trends")
     yearly_fig = plot_yearly_trend(df)
-    st.plotly_chart(yearly_fig, use_container_width=True)
+    st.plotly_chart(yearly_fig, width='stretch')
     generate_yearly_trend_observations(df)
     
     st.markdown("---")
@@ -188,7 +188,7 @@ def show_geography_tab(df: pd.DataFrame):
     
     # Bar chart and observations
     state_bar, _ = plot_statewise_data(df)
-    st.plotly_chart(state_bar, use_container_width=True)
+    st.plotly_chart(state_bar, width='stretch')
     generate_statewise_observations(df)
     
     st.markdown("---")
@@ -196,7 +196,7 @@ def show_geography_tab(df: pd.DataFrame):
     # Map visualization
     st.markdown("### National Heat Map")
     choropleth_fig = create_state_choropleth(df)
-    st.plotly_chart(choropleth_fig, use_container_width=True)
+    st.plotly_chart(choropleth_fig, width='stretch')
     generate_choropleth_observations(df)
     
     st.markdown("---")
@@ -204,7 +204,7 @@ def show_geography_tab(df: pd.DataFrame):
     # City analysis
     st.markdown("### Cities Most Affected")
     city_fig = create_top_cities_bar_plot(df)
-    st.plotly_chart(city_fig, use_container_width=True)
+    st.plotly_chart(city_fig, width='stretch')
     generate_top_cities_observations(df)
 
 
@@ -221,7 +221,7 @@ def show_severity_tab(df: pd.DataFrame):
     # Intent vs Outcome patterns
     st.markdown("### Intent and Outcome Patterns")
     heatmap_fig = create_heatmap(df)
-    st.plotly_chart(heatmap_fig, use_container_width=True)
+    st.plotly_chart(heatmap_fig, width='stretch')
     generate_heatmap_observations(df)
     
     st.markdown("---")
@@ -280,7 +280,7 @@ def show_executive_report():
         st.info("Reports are generated in HTML format for easy viewing and sharing.")
     
     # Generate button
-    if st.button("Generate Report", type="primary", use_container_width=True):
+    if st.button("Generate Report", type="primary", width='stretch'):
         with st.spinner("Generating report..."):
             # Load data
             df, quality_metrics = load_and_preprocess_data()

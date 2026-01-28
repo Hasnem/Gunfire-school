@@ -221,7 +221,7 @@ def display_people_analysis(narratives: pd.Series):
         plot_bgcolor='white'
     )
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
     
     # Age group summary
     st.markdown("##### Age Groups")

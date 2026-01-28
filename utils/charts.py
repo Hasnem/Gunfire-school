@@ -306,7 +306,7 @@ def display_monthly_analysis(df: pd.DataFrame):
     # Add insight text below chart
     summer_pct = (monthly_counts[['Jun', 'Jul', 'Aug']].sum() / monthly_counts.sum() * 100)
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
     st.caption(f"📊 Summer months account for {summer_pct:.1f}% of incidents, showing clear correlation with school schedules.")
 
 
@@ -383,7 +383,7 @@ def display_day_of_week_analysis(df: pd.DataFrame):
         )
     )
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
     
     # Add insight below
     weekday_rate = comparison.iloc[0]['Avg_Per_Day']
@@ -469,7 +469,7 @@ def display_key_factor_distribution(df: pd.DataFrame):
     fig.update_xaxes(title_text="Number of Incidents", rangemode='tozero')
     fig.update_yaxes(title_text="", categoryorder='array', categoryarray=severity_order[::-1])
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
     
     # Add key insights
     no_casualty_pct = percentages[0] if len(percentages) > 0 else 0
@@ -597,7 +597,7 @@ def plot_statewise_data(df: pd.DataFrame) -> Tuple[go.Figure, go.Figure]:
     state_stats = state_stats.sort_values('Incidents', ascending=False)
     
     # Focus on top 15 states for bar chart
-    top_states = state_stats.head(15)
+    top_states = state_stats.head(15).copy()
     
     # Create bar chart
     fig_bar = go.Figure()
@@ -910,7 +910,7 @@ def display_top_tragic_incidents(df: pd.DataFrame, n: int = 10):
     )
     fig = create_clean_layout(fig, f"High-Impact Incidents (Top {n})", height=400, show_legend=True)
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
     
     # Add context note
     st.caption(

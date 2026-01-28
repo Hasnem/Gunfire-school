@@ -2,7 +2,7 @@
 **A Comprehensive Analytics & Decision Support Dashboard**
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://gunfire-school.streamlit.app/)
-![Methodology](https://img.shields.io/badge/Methodology-ETL%20%7C%20Analytics%20%7C%20Visualization-blue)
+[![Methodology](https://img.shields.io/badge/Methodology-ETL%20%7C%20Analytics%20%7C%20Visualization-blue)](METRICS.md)
 ![Data Source](https://img.shields.io/badge/Data-Everytown%20Research-green)
 
 ---

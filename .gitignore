@@ -2,11 +2,12 @@ __pycache__/
 *.pyc
 
 venv/
+.venv/
 .vscode/
 .env
 attachments/
 backup/
 
-# Ignore generated reports (except sample in assets/)
-school_violence_report_*.html
-!assets/sample_executive_report.html
+# Claude Code
+CLAUDE.md
+.claude/

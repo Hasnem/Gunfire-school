@@ -15,7 +15,7 @@ from collections import Counter
 from wordcloud import WordCloud
 import base64
 from io import BytesIO
-from utils.utils_common import display_metric_card, display_info_box, COLORS
+from utils.utils_common import COLORS
 
 
 def display_narrative_analysis(df: pd.DataFrame):

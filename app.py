@@ -1,5 +1,4 @@
 import streamlit as st
-from PIL import Image
 import pandas as pd
 from datetime import datetime
 
@@ -9,9 +8,8 @@ from utils.narrative_analysis import display_narrative_analysis
 from utils.data_loading import load_and_preprocess_data
 from utils.data_filters import apply_sidebar_filters
 from utils.utils_common import (
-    display_header, display_metric_cards, display_latest_incident,
-    display_year_disclaimer, create_summary_stats, format_percentage,
-    format_number, display_latest_incident_ticker, display_latest_incident_compact
+    display_header, display_metric_cards, display_year_disclaimer,
+    display_latest_incident_ticker
 )
 from utils.charts import (
     plot_yearly_trend, display_monthly_analysis, display_day_of_week_analysis,
@@ -48,13 +46,6 @@ def main():
             "Select View",
             ["Dashboard", "Executive Report", "About"]
         )
-        
-        # Add logo if available
-        try:
-            logo = Image.open("Everytown_final_logo.png")
-            st.image(logo, width='stretch')
-        except:
-            pass
     
     # Route to appropriate page
     if page == "Dashboard":

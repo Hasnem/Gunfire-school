@@ -1,10 +1,8 @@
 import pandas as pd
-import numpy as np
 import requests
 import io
 import streamlit as st
-from datetime import datetime, timedelta
-import time
+from datetime import datetime
 
 from utils.utils_common import STATE_MAPPING
 
@@ -27,8 +25,6 @@ def load_and_preprocess_data() -> tuple[pd.DataFrame, dict]:
     Returns:
         tuple: (processed_dataframe, quality_metrics_dict)
     """
-    start_time = time.time()
-    
     # Data source configuration
     url = 'https://everytownresearch.org/wp-content/uploads/sites/4/etown-maps/gunfire-on-school-grounds/data.csv'
     headers = {'User-Agent': 'Mozilla/5.0'}
@@ -52,8 +48,7 @@ def load_and_preprocess_data() -> tuple[pd.DataFrame, dict]:
         'missing_coords': 0,
         'missing_narratives': 0,
         'duplicate_incidents': 0,
-        'data_freshness': None,
-        'load_time': 0
+        'data_freshness': None
     }
     
     # 1. Parse and validate dates
@@ -138,7 +133,6 @@ def load_and_preprocess_data() -> tuple[pd.DataFrame, dict]:
     )
     
     # Finalize quality metrics
-    quality_metrics['load_time'] = round(time.time() - start_time, 2)
     quality_metrics['final_rows'] = len(df)
     
     # Calculate overall data completeness score
@@ -151,155 +145,3 @@ def load_and_preprocess_data() -> tuple[pd.DataFrame, dict]:
     )
     
     return df, quality_metrics
-
-
-@st.cache_data
-def calculate_rolling_statistics(df: pd.DataFrame, window_days: int = 365) -> pd.DataFrame:
-    """
-    Calculate rolling statistics for trend analysis.
-    
-    Args:
-        df: Input dataframe with incident data
-        window_days: Number of days for rolling window (default: 365)
-    
-    Returns:
-        DataFrame with rolling statistics by date
-    """
-    if df.empty:
-        return pd.DataFrame()
-    
-    df_sorted = df.sort_values('Incident Date').copy()
-    
-    # Create continuous daily time series
-    date_range = pd.date_range(
-        start=df_sorted['Incident Date'].min(),
-        end=df_sorted['Incident Date'].max(),
-        freq='D'
-    )
-    
-    # Aggregate incidents by day
-    daily_counts = df_sorted.groupby(df_sorted['Incident Date'].dt.date).agg({
-        'ID': 'count',
-        'Number Killed': 'sum',
-        'Number Wounded': 'sum',
-        'Total_Casualties': 'sum'
-    }).reindex(date_range.date, fill_value=0)
-    
-    # Calculate rolling statistics
-    rolling_stats = pd.DataFrame(index=daily_counts.index)
-    
-    # Rolling sums
-    rolling_stats['incidents_rolling'] = (
-        daily_counts['ID']
-        .rolling(window=window_days, min_periods=1)
-        .sum()
-    )
-    rolling_stats['killed_rolling'] = (
-        daily_counts['Number Killed']
-        .rolling(window=window_days, min_periods=1)
-        .sum()
-    )
-    rolling_stats['wounded_rolling'] = (
-        daily_counts['Number Wounded']
-        .rolling(window=window_days, min_periods=1)
-        .sum()
-    )
-    rolling_stats['casualties_rolling'] = (
-        daily_counts['Total_Casualties']
-        .rolling(window=window_days, min_periods=1)
-        .sum()
-    )
-    
-    # Calculate 30-day rate of change
-    rolling_stats['incidents_change_rate'] = (
-        rolling_stats['incidents_rolling']
-        .pct_change(periods=30)
-        .fillna(0) * 100
-    )
-    
-    return rolling_stats
-
-
-@st.cache_data
-def get_statistical_summary(df: pd.DataFrame) -> dict:
-    """
-    Generate comprehensive statistical summary of the data.
-    
-    Args:
-        df: Processed incident dataframe
-    
-    Returns:
-        Dictionary containing categorized statistics
-    """
-    if df.empty:
-        return {}
-    
-    summary = {
-        'temporal': {},
-        'geographic': {},
-        'severity': {},
-        'patterns': {}
-    }
-    
-    # Temporal statistics
-    yearly_counts = df.groupby('Year').size()
-    if not yearly_counts.empty:
-        summary['temporal'] = {
-            'avg_incidents_per_year': yearly_counts.mean(),
-            'year_with_most_incidents': yearly_counts.idxmax(),
-            'avg_days_between_incidents': df['Days_Since_Previous'].mean() if 'Days_Since_Previous' in df else None,
-            'median_days_between_incidents': df['Days_Since_Previous'].median() if 'Days_Since_Previous' in df else None,
-            'trend_direction': 'increasing' if yearly_counts.iloc[-5:].mean() > yearly_counts.iloc[:5].mean() else 'decreasing'
-        }
-    
-    # Geographic statistics
-    summary['geographic'] = {
-        'states_affected': df['State'].nunique(),
-        'cities_affected': df['City'].nunique(),
-        'schools_affected': df['School name'].nunique(),
-        'concentration_index': (
-            df.groupby('State').size().std() / 
-            df.groupby('State').size().mean()
-            if df.groupby('State').size().mean() > 0 else 0
-        )
-    }
-    
-    # Severity statistics
-    total_incidents = len(df)
-    if total_incidents > 0:
-        summary['severity'] = {
-            'fatality_rate': (df['Is_Fatal'].sum() / total_incidents) * 100,
-            'avg_casualties_per_incident': df['Total_Casualties'].mean(),
-            'mass_casualty_rate': (df['Mass_Casualty'].sum() / total_incidents) * 100,
-            'avg_killed_when_fatal': (
-                df[df['Is_Fatal']]['Number Killed'].mean() 
-                if df['Is_Fatal'].sum() > 0 else 0
-            ),
-            'avg_wounded_when_injuries': (
-                df[df['Number Wounded'] > 0]['Number Wounded'].mean()
-                if (df['Number Wounded'] > 0).sum() > 0 else 0
-            )
-        }
-    
-    # Pattern statistics
-    summary['patterns'] = {
-        'most_common_day': (
-            df['DayOfWeek'].mode().iloc[0] 
-            if not df['DayOfWeek'].mode().empty else 'N/A'
-        ),
-        'most_common_month': (
-            df['Month'].mode().iloc[0] 
-            if not df['Month'].mode().empty else 'N/A'
-        ),
-        'most_common_intent': (
-            df['Intent'].mode().iloc[0] 
-            if 'Intent' in df and not df['Intent'].mode().empty else 'N/A'
-        ),
-        'weekend_vs_weekday_ratio': (
-            len(df[df['DayOfWeek_Num'].isin([5,6])]) / 
-            len(df[df['DayOfWeek_Num'].isin([0,1,2,3,4])])
-            if len(df[df['DayOfWeek_Num'].isin([0,1,2,3,4])]) > 0 else 0
-        )
-    }
-    
-    return summary

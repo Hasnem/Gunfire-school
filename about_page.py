@@ -697,8 +697,8 @@ def about_page():
                 </div>
                 <div>
                     <h4 style="color: #2c3e50; margin-bottom: 1rem;">For Developers</h4>
-                    <p>Contribute to this open-source project on 
-                    <a href="#" target="_blank">GitHub</a></p>
+                    <p>Contribute to this open-source project on
+                    <a href="https://github.com/hasnem/Gunfire-school" target="_blank">GitHub</a></p>
                 </div>
                 <div>
                     <h4 style="color: #2c3e50; margin-bottom: 1rem;">For Feedback</h4>

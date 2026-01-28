@@ -1,146 +1,125 @@
-# School Gun Violence Dashboard
+# School Gun Violence Analytics Dashboard
 
-A comprehensive data analysis dashboard tracking gun-related incidents on school grounds across the United States. Built with Streamlit and powered by data from [Everytown Research](https://everytownresearch.org/maps/gunfire-on-school-grounds/).
+**A Business Intelligence & Analytics Solution for Public Safety Data**
 
-**🔗 [Live Dashboard](https://gunfire-school.streamlit.app/)**
-
-## Overview
-
-This dashboard transforms raw incident data into actionable insights, helping policymakers, educators, researchers, and communities understand patterns and trends in school gun violence to inform prevention strategies.
-
-## Features
-
-### 📊 Real-Time Data Analysis
-- Automatically fetches and processes the latest incident data
-- Interactive filters by time period, location, and severity
-- Dynamic visualizations that update based on selections
-
-### 📈 Comprehensive Analytics
-- **Temporal Trends**: Yearly, monthly, and weekly patterns
-- **Geographic Insights**: State and city-level analysis with heat maps
-- **Severity Assessment**: Casualty statistics and incident classifications
-- **Narrative Analysis**: Text mining of incident descriptions
-
-### 📑 Reporting Capabilities
-- Generate executive reports in HTML format
-- Export filtered data for further analysis
-- Print-friendly layouts for presentations
-
-## Quick Start
-
-### Prerequisites
-- Python 3.8+
-- pip (Python package manager)
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/school-gun-violence-dashboard.git
-cd school-gun-violence-dashboard
-```
-
-2. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Run the dashboard:
-```bash
-streamlit run app.py
-```
-
-The dashboard will open in your default browser at `http://localhost:8501`
-
-## Project Structure
-
-```
-├── app.py                 # Main application entry point
-├── about_page.py         # About page content
-├── requirements.txt      # Python dependencies
-├── utils/
-│   ├── charts.py         # Visualization functions
-│   ├── data_filters.py   # Data filtering logic
-│   ├── data_loading.py   # Data fetching and preprocessing
-│   ├── executive_report.py # Report generation
-│   ├── narrative_analysis.py # Text analysis
-│   ├── observations.py   # Insight generation
-│   └── utils_common.py   # Shared utilities
-└── README.md
-```
-
-## Usage Guide
-
-### 1. Filtering Data
-Use the sidebar to filter by:
-- **Time Period**: Date ranges or specific years
-- **Location**: Individual states or top N states
-- **Severity**: All incidents, casualties only, or fatal incidents
-
-### 2. Exploring Tabs
-- **Trends**: Analyze patterns over time
-- **Geography**: Explore spatial distributions
-- **Severity**: Understand incident impacts
-- **Narratives**: Extract insights from descriptions
-
-### 3. Generating Reports
-Click "Executive Report" in the navigation to create comprehensive PDF summaries with your selected data.
-
-## Data Source
-
-This dashboard uses publicly available data from [Everytown Research](https://everytownresearch.org/maps/gunfire-on-school-grounds/), which tracks incidents where a firearm was brandished, fired, or a bullet hit school property.
-
-### Data Includes:
-- Incident date and location
-- School information
-- Casualty counts
-- Intent and outcome classifications
-- Narrative descriptions
-
-### Important Notes:
-- Current year data is incomplete and continuously updated
-- Some records may have missing geographic or narrative information
-- Data reflects reported incidents only
-
-## Technologies Used
-
-- **[Streamlit](https://streamlit.io/)**: Web application framework
-- **[Pandas](https://pandas.pydata.org/)**: Data manipulation
-- **[Plotly](https://plotly.com/)**: Interactive visualizations
-- **[NLTK](https://www.nltk.org/)**: Natural language processing
-- **[WordCloud](https://github.com/amueller/word_cloud)**: Text visualization
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-### Development Setup
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- **Data Source**: [Everytown Research](https://everytownresearch.org/) for maintaining comprehensive incident data
-- **Community**: All contributors and users working toward safer schools
-
-## Contact
-
-For questions, suggestions, or collaborations, please open an issue on GitHub.
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://gunfire-school.streamlit.app/)
+![Methodology](https://img.shields.io/badge/Methodology-ETL%20%7C%20NLP%20%7C%20Visual%20Analytics-blue?style=flat-square)
+![Data Source](https://img.shields.io/badge/Data-Everytown%20Research-green?style=flat-square)
 
 ---
 
-**Disclaimer**: This is an independent analysis tool. For the most current information and research, please visit [Everytown Research](https://everytownresearch.org/).
+## 📌 Problem Statement & Business Context
+Gun violence on school grounds is a complex, multi-faceted issue that requires data-driven interventions. Policy makers, school administrators, and safety researchers often struggle to synthesize scattered incident reports into actionable patterns.
+
+**This dashboard solves that data fragmentation problem.** 
+
+It serves as a centralized **Decision Support System (DSS)** that:
+1.  **Ingests** raw incident data from public research repositories.
+2.  **Validates & Transforms** verifying geospatial coherence and temporal integrity.
+3.  **Delivers Insights** through an interactive interface, enabling stakeholders to identify high-risk regions, time-based patterns, and severity trends affecting U.S. schools.
+
+---
+
+## 📊 Analytics Capabilities
+
+### 1. Temporal & Trend Analysis
+*Objective: Identify when incidents are most likely to occur to optimize resource allocation.*
+-   **Yearly/Monthly Forecasting Views**: Visualizes the rise and fall of incident rates to correlate with policy changes or societal events.
+-   **Cyclical Pattern Recognition**: Breakdowns by day-of-week and month to highlight "high-risk" windows (e.g., return to school periods).
+
+### 2. Geospatial Intelligence
+*Objective: Pinpoint regional hotspots for targeted intervention.*
+-   **State-Level Chloropleths**: Heatmaps identifying states with disproportionate incident rates.
+-   **City-Level Granularity**: "Top N" analysis to focus on specific metropolitan areas requiring immediate attention.
+
+### 3. Severity & Classification Matrix
+*Objective: Distinguish between minor incidents and mass casualty events for appropriate response planning.*
+-   **Casualty Impact Analysis**: Quantifies the human cost (killed vs. wounded).
+-   **Intent Classification**: Filters data by incident outcome (accidental, targeted, etc.).
+
+### 4. Automated Executive Reporting
+*Objective: Streamline communication with stakeholders.*
+-   **Executive Summary Extraction**: Auto-generates high-level insights with "Data Quality Scores" (e.g., *Completeness: 100%*) to validate findings.
+-   **Strategic Recommendations**: Delivers actionable advice alongside raw metrics.
+-   **Professional Formatting**: Production-ready HTML output with custom CSS for board-level presentations.
+
+**(Placeholder: Insert Screenshot of Report Executive Summary Here)**
+*Example of the generated executive report showing data quality indicators and key metrics.*
+
+---
+
+## 🛠️ Data Pipeline & Technical Architecture
+
+This project simulates a production-grade **ETL (Extract, Transform, Load)** pipeline:
+
+### **E**xtract (Data Ingestion)
+-   Automated fetching of live CSV data from the **Everytown Research** public repository.
+-   Robust error handling for network resilience.
+
+### **T**ransform (Data Engineering)
+*Located in `utils/data_loading.py`*
+-   **Data Cleaning**: Deduplication logic based on composite keys (Date + City + School) to ensure statistical accuracy.
+-   **Geospatial Validation**: Coordinate verification to prevent mapping errors.
+-   **Feature Engineering**: 
+    -   Deriving "School Year" logic (Aug-July) for academic-relevant trending.
+    -   Computing "Days Since Last Incident" to track safety streaks.
+    -   Natural Language Processing (NLP) on narrative text to extract unstructured insights.
+
+### **L**oad (Visualization Layer)
+-   Optimized loading into **Streamlit's** in-memory cache for sub-second dashboard performance.
+-   Serving processed data to **Plotly** for responsive, interactive charting.
+
+---
+
+## 💻 Tech Stack & Skills Demonstrated
+
+| Domain | Technologies |
+| :--- | :--- |
+| **Orchestration & UI** | Python, Streamlit |
+| **Data Engineering** | Pandas, NumPy, Request Handling |
+| **Visualization** | Plotly Express, Plotly Graph Objects, Folium |
+| **Data Science** | NLTK (Text Mining), Statistical Analysis |
+
+---
+
+## 🚀 Setup & Usage
+
+### Prerequisites
+-   Python 3.8+
+-   pip
+
+### local Installation
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/yourusername/school-gun-violence-dashboard.git
+    cd school-gun-violence-dashboard
+    ```
+
+2.  **Environment Setup**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # Windows: venv\Scripts\activate
+    pip install -r requirements.txt
+    ```
+
+3.  **Launch Dashboard**
+    ```bash
+    streamlit run app.py
+    ```
+
+---
+
+## 📸 Dashboard Preview
+
+> *Note: Screenshots illustrate the dashboard's capabilities for prospective employers.*
+
+**(Placeholder: Insert Main Dashboard View Here)**
+*Real-time interface showing key metric cards and map visualization.*
+
+**(Placeholder: Insert Trend Analysis View Here)**
+*Interactive charts allowing users to drill down into specific time periods.*
+
+---
+
+## ⚖️ Disclaimer
+*This project is an independent analytics tool developed for educational and portfolio purposes. Data is sourced from [Everytown Research](https://everytownresearch.org/maps/gunfire-on-school-grounds/).*

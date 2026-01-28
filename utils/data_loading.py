@@ -11,8 +11,19 @@ from utils.utils_common import STATE_MAPPING
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def load_and_preprocess_data() -> tuple[pd.DataFrame, dict]:
     """
-    Load and preprocess gunfire incident data with comprehensive quality tracking.
+    **ETL Pipeline: Data Ingestion & Transformation Layer**
     
+    Orchestrates the extraction of raw incident data, performs cleaning/validation,
+    and constructs analytical features.
+    
+    **Process Flow:**
+    1. **Extract**: Fetch live CSV from Everytown Research.
+    2. **Transform**: 
+       - Deduplicate records based on composite keys.
+       - Validate geospatial variance.
+       - Engineer features (School Year, Days Since, Severity Class).
+    3. **Load**: Return optimized DataFrame for dashboard consumption.
+
     Returns:
         tuple: (processed_dataframe, quality_metrics_dict)
     """
